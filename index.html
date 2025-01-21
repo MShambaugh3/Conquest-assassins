@@ -145,6 +145,45 @@
         }).catch((error) => {
             console.error("Error checking game start status: ", error);
         });
+
+        const eliminateTargetButton = document.getElementById("eliminate-target-btn");
+
+        // Show the "Target Eliminated" button if the player has a target
+        function showGamePage(playerData) {
+            const targetName = playerData.target ? playerData.target : "Target will be revealed when the game begins.";
+            playerNameSpan.textContent = playerData.lastName;
+            targetSpan.textContent = targetName;
+        
+            // Display the "Eliminate Target" button if there's a target
+            if (targetName !== "Target will be revealed when the game begins.") {
+                eliminateTargetButton.style.display = "inline-block";
+            }
+        
+            // Hide sign-in and show game page with smooth transition
+            signInDiv.style.display = 'none';
+            gameDiv.style.display = 'block';
+            gameDiv.classList.add('fade-in');
+        }
+        
+        // Eliminate the target when the button is clicked
+        eliminateTargetButton.addEventListener("click", () => {
+            const userId = `${lastNameInput.value}_${codeInput.value}`;
+            const target = targetSpan.textContent;
+        
+            if (target && target !== "Target will be revealed when the game begins.") {
+                // Update the target to "eliminated" in the database for the player
+                update(ref(database, 'players/' + userId), {
+                    target: "Eliminated"
+                }).then(() => {
+                    console.log(`${userId} has eliminated their target`);
+                    targetSpan.textContent = "You have eliminated your target!";
+                    eliminateTargetButton.style.display = "none"; // Hide the button after clicking
+                }).catch((error) => {
+                    console.error("Error eliminating target: ", error);
+                });
+            }
+        });
+
     </script>
 
     <style>
@@ -250,6 +289,25 @@
             opacity: 1 !important;
         }
 
+        #eliminate-target-btn {
+            background-color: #ff5722;
+            color: #fff;
+            border: none;
+            padding: 10px 30px;
+            font-size: 1.2em;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            box-shadow: 0 0 10px #ff5722, 0 0 20px #e64a19;
+            display: none; /* Hidden initially */
+        }
+        
+        #eliminate-target-btn:hover {
+            background-color: #e64a19;
+            box-shadow: 0 0 15px #ff5722, 0 0 25px #e64a19;
+        }
+
+        
         /* Media Query for iPhone Size */
         @media (max-width: 375px) {
             body {
@@ -299,6 +357,10 @@
         <p>Your target: <span id="target"></span></p>
         <p id="game-status"></p>
     </div>
+
+    <p id="game-status"></p>
+    <button id="eliminate-target-btn">Eliminate Target</button>
+
 
 </body>
 </html>
