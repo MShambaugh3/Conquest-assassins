@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASSASSINS</title>
+
+    <!-- Firebase SDK (Module Version) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-app.js";
+        import { getDatabase, ref, set, get, child, update } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-database.js";
+
+        // Your Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCBqWm98LL4Kn5GteIEMclELapks-jcsFw",
+            authDomain: "assassin-dd206.firebaseapp.com",
+            projectId: "assassin-dd206",
+            storageBucket: "assassin-dd206.firebasestorage.app",
+            messagingSenderId: "507379491631",
+            appId: "1:507379491631:web:85186e6dbfa0662bb037da",
+            measurementId: "G-P7N9BZYQJ9"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        const signInButton = document.getElementById("sign-in-btn");
+        const lastNameInput = document.getElementById("lastName");
+        const codeInput = document.getElementById("code");
+        const playerNameSpan = document.getElementById("player-name");
+        const targetSpan = document.getElementById("target");
+        const signInDiv = document.getElementById("sign-in");
+        const gameDiv = document.getElementById("game");
+        const gameStatusSpan = document.getElementById("game-status");
+
+        const gameStartedRef = ref(database, 'gameStarted');
+        const playersRef = ref(database, 'players');
+
+        signInButton.addEventListener("click", () => {
+            const lastName = lastNameInput.value;
+            const code = codeInput.value;
+
+            if (lastName && code.length === 4) {
+                const userId = `${lastName}_${code}`;
+                console.log(`Signing up user: ${userId}`);
+
+                // Check if player exists, if not create new player
+                get(ref(database, 'players/' + userId)).then((snapshot) => {
+                    if (snapshot.exists()) {
+                        console.log(`Player ${userId} already exists, showing their target`);
+                        showGamePage(snapshot.val());
+                    } else {
+                        console.log(`Player ${userId} is new, creating them`);
+                        set(ref(database, 'players/' + userId), {
+                            lastName: lastName,
+                            code: code,
+                            target: ""
+                        }).then(() => {
+                            console.log(`Player ${userId} added to Firebase`);
+                            checkAllPlayersSignedUp();
+                        }).catch((error) => {
+                            console.error("Error writing to database: ", error);
+                        });
+                    }
+                }).catch((error) => {
+                    console.error("Error getting player data: ", error);
+                });
+            } else {
+                alert("Please enter a valid last name and 4-digit code.");
+            }
+        });
+
+        function checkAllPlayersSignedUp() {
+            get(playersRef).then((snapshot) => {
+                const players = snapshot.val();
+                const playerIds = Object.keys(players);
+                const requiredPlayersCount = 13; // Adjust the number based on how many players you want
+
+                console.log(`Current player count: ${playerIds.length}, required: ${requiredPlayersCount}`);
+
+                if (playerIds.length >= requiredPlayersCount) {
+                    console.log("All assassins ready, BEGIN!");
+                    // All players signed up, now mark game as started
+                    update(gameStartedRef, { started: true }).then(() => {
+                        showGameStatus("The game has begun!");
+                        assignTargets(players);
+                    }).catch((error) => {
+                        console.error("Error updating game status: ", error);
+                    });
+                } else {
+                    showGameStatus("The league is almost full...");
+                }
+            }).catch((error) => {
+                console.error("Error getting players: ", error);
+            });
+        }
+
+        function assignTargets(players) {
+            const playerIds = Object.keys(players);
+            const availableTargets = [...playerIds];
+
+            // Randomly assign each player a target, excluding themselves
+            playerIds.forEach((playerId) => {
+                availableTargets.splice(availableTargets.indexOf(playerId), 1); // Remove self from available targets
+
+                const randomTargetIndex = Math.floor(Math.random() * availableTargets.length);
+                const targetId = availableTargets[randomTargetIndex];
+
+                // Assign target to the player
+                update(ref(database, 'players/' + playerId), {
+                    target: players[targetId].lastName
+                }).then(() => {
+                    console.log(`${players[playerId].lastName} is assigned to target ${players[targetId].lastName}`);
+                }).catch((error) => {
+                    console.error("Error assigning target: ", error);
+                });
+            });
+        }
+
+        function showGamePage(playerData) {
+            const targetName = playerData.target ? playerData.target : "Target will be assigned once the game begins.";
+            playerNameSpan.textContent = playerData.lastName;
+            targetSpan.textContent = targetName;
+
+            // Hide sign-in and show game page with smooth transition
+            signInDiv.style.display = 'none';
+            gameDiv.style.display = 'block';
+            gameDiv.classList.add('fade-in');
+        }
+
+        function showGameStatus(statusMessage) {
+            gameStatusSpan.textContent = statusMessage;
+        }
+
+        // Check if the game has begun
+        get(gameStartedRef).then((snapshot) => {
+            if (snapshot.exists() && snapshot.val().started) {
+                console.log("Game has started.");
+                showGameStatus("The game has already started!");
+            } else {
+                console.log("Game has not started yet.");
+                showGameStatus("SOON, patience is an assassins friend...");
+            }
+        }).catch((error) => {
+            console.error("Error checking game start status: ", error);
+        });
+    </script>
+
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-top: 20px;
+            color: #fff;
+        }
+
+        #game-status {
+            margin-top: 10px;
+            font-size: 1.2em;
+            color: #f5f5f5;
+        }
+
+        #sign-in {
+            display: block;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 30px;
+            margin-top: 50px;
+            width: 100%;
+            max-width: 350px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+            margin-left: auto;
+            margin-right: auto;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        #sign-in input {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            font-size: 1.2em;
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 5px;
+        }
+
+        #sign-in-btn {
+            background-color: #ff5722;
+            color: #fff;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        #sign-in-btn:hover {
+            background-color: #e64a19;
+        }
+
+        #game {
+            display: none;
+            font-size: 1.5em;
+            margin-top: 50px;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        #game p {
+            margin: 20px 0;
+        }
+
+        #game .target {
+            color: #ff5722;
+        }
+
+        .fade-in {
+            opacity: 1 !important;
+        }
+
+        /* Media Query for iPhone Size */
+        @media (max-width: 375px) {
+            body {
+                font-size: 16px;
+            }
+
+            #sign-in {
+                width: 90%;
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            #game p {
+                font-size: 1.2em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Senior Assassin Game</h1>
+
+    <div id="game-status"></div>
+
+    <div id="sign-in">
+        <input type="text" id="lastName" placeholder="Enter your Last Name">
+        <input type="text" id="code" placeholder="Enter your 4-Digit Code">
+        <button id="sign-in-btn">Sign Up</button>
+    </div>
+
+    <div id="game">
+        <p>Welcome, <span id="player-name"></span></p>
+        <p>Your target: <span id="target"></span></p>
+    </div>
+
+</body>
+</html>
