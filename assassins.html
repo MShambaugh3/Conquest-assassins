@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CADET CONQUEST</title>
+    <title>CONQUEST</title>
 
     <!-- Firebase SDK (Module Version) -->
     <script type="module">
@@ -43,7 +43,7 @@
 
             if (lastName && code.length === 4) {
                 const userId = `${lastName}_${code}`;
-                console.log(`Signing up cadet: ${userId}`);
+                console.log(`Signing up : ${userId}`);
 
                 // Check if player exists, if not create new player
                 get(ref(database, 'players/' + userId)).then((snapshot) => {
@@ -57,7 +57,7 @@
                             code: code,
                             target: ""
                         }).then(() => {
-                            console.log(`Cadet ${userId} successfully enrolled`);
+                            console.log(`User ${userId} successfully enrolled`);
                             checkAllPlayersSignedUp();
                         }).catch((error) => {
                             console.error("Error writing to database: ", error);
@@ -80,7 +80,7 @@
                 console.log(`Current player count: ${playerIds.length}, required: ${requiredPlayersCount}`);
 
                 if (playerIds.length >= requiredPlayersCount) {
-                    console.log("All cadets are ready! The hunt begins...");
+                    console.log("All players are ready! The hunt begins...");
                     // All players signed up, now mark game as started
                     update(gameStartedRef, { started: true }).then(() => {
                         showGameStatus("The game has begun! Time to strike...");
@@ -89,7 +89,7 @@
                         console.error("Error updating game status: ", error);
                     });
                 } else {
-                    showGameStatus("Cadets are reporting in... almost there.");
+                    showGameStatus("Clans are reporting in... almost there.");
                 }
             }).catch((error) => {
                 console.error("Error getting players: ", error);
@@ -140,7 +140,7 @@
                 showGameStatus("The game is already in progress. Stay sharp.");
             } else {
                 console.log("Game hasn't started yet.");
-                showGameStatus("Patience, cadet. Your mission awaits...");
+                showGameStatus("Patience, Your mission awaits...");
             }
         }).catch((error) => {
             console.error("Error checking game start status: ", error);
@@ -272,7 +272,7 @@
 </head>
 <body>
 
-    <h1>CADET CONQUEST</h1>
+    <h1>CONQUEST</h1>
     <h2>are you ready?</h2>
 
     <div id="sign-in">
