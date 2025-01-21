@@ -90,7 +90,7 @@
                 // All players signed up, now mark game as started
                 update(gameStartedRef, { started: true }).then(() => {
                     showGameStatus("The game has begun! Time to strike...");
-                    assignTargets(players);
+                    assignTargets(players); // Assign targets now that all players are signed up
                 }).catch((error) => {
                     console.error("Error updating game status: ", error);
                 });
@@ -104,29 +104,28 @@
 
     function assignTargets(players) {
         const playerIds = Object.keys(players);
-        const availableTargets = [...playerIds];
 
-        // Randomly assign each player a target, excluding themselves
-        playerIds.forEach((playerId) => {
-            availableTargets.splice(availableTargets.indexOf(playerId), 1); // Remove self from available targets
+        if (playerIds.length === 2) {
+            // Assign each player the other as a target
+            const [player1, player2] = playerIds;
 
-            const randomTargetIndex = Math.floor(Math.random() * availableTargets.length);
-            const targetId = availableTargets[randomTargetIndex];
+            // Assign player1's target as player2 and vice versa
+            update(ref(database, 'players/' + player1), {
+                target: players[player2].lastName
+            }).then(() => {
+                console.log(`${players[player1].lastName} now has their target: ${players[player2].lastName}`);
+            }).catch((error) => {
+                console.error("Error assigning target for player1: ", error);
+            });
 
-            // Ensure targetId exists before accessing players[targetId]
-            if (players[targetId]) {
-                // Assign target to the player
-                update(ref(database, 'players/' + playerId), {
-                    target: players[targetId].lastName
-                }).then(() => {
-                    console.log(`${players[playerId].lastName} now has their target: ${players[targetId].lastName}`);
-                }).catch((error) => {
-                    console.error("Error assigning target: ", error);
-                });
-            } else {
-                console.error(`Error: Target not found for player ${playerId}`);
-            }
-        });
+            update(ref(database, 'players/' + player2), {
+                target: players[player1].lastName
+            }).then(() => {
+                console.log(`${players[player2].lastName} now has their target: ${players[player1].lastName}`);
+            }).catch((error) => {
+                console.error("Error assigning target for player2: ", error);
+            });
+        }
     }
 
     function showGamePage(playerData) {
@@ -216,11 +215,13 @@
                     const player = players[playerId];
                     const listItem = document.createElement("li");
                     const playerName = document.createElement("span");
-
-                    // Set the player's name and status
                     playerName.textContent = player.lastName;
-                    if (player.target && player.target !== "Eliminated") {
-                        playerName.textContent += ` (Target: ${player.target})`;
+
+                    // Show target only for the logged-in player
+                    if (playerId === `${lastNameInput.value}_${codeInput.value}`) {
+                        const targetInfo = document.createElement("span");
+                        targetInfo.textContent = ` - Target: ${player.target}`;
+                        listItem.appendChild(targetInfo);
                     }
 
                     // Highlight eliminated players in orange
