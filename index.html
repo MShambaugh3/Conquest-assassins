@@ -75,7 +75,7 @@
             get(playersRef).then((snapshot) => {
                 const players = snapshot.val();
                 const playerIds = Object.keys(players);
-                const requiredPlayersCount = 13; // Adjust the number based on how many players you want
+                const requiredPlayersCount = 2; // Adjust the number based on how many players you want
 
                 console.log(`Current player count: ${playerIds.length}, required: ${requiredPlayersCount}`);
 
