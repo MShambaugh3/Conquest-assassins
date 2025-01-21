@@ -150,15 +150,28 @@
     <style>
 
         body {
-        background-color: #000;
-        background: url('./ninja.png') no-repeat center center fixed;
-        background-size: cover;
-        color: #fff;
-        font-family: 'Android Assassin', sans-serif;
-        text-align: center;
-        margin: 0;
-        padding: 0;
+            background-color: #000;
+            color: #fff;
+            font-family: 'Android Assassin', sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            position: relative; /* Ensures background positioning works */
         }
+        
+        body::before {
+            content: "";
+            background: url('./ninja.png') no-repeat center center;
+            background-size: contain; /* Ensures the image is smaller and fits nicely */
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%; /* Spans the width */
+            height: 100%; /* Spans the height */
+            opacity: 0.2; /* Adjust the opacity to blend into the black background */
+            z-index: -1; /* Keeps the image in the background */
+        }
+
 
         h1 {
             font-size: 3em;
