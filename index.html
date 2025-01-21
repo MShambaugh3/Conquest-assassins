@@ -102,32 +102,59 @@
         });
     }
 
-    function assignTargets(players) {
-        const playerIds = Object.keys(players);
+function assignTargets(players) {
+    const playerIds = Object.keys(players);
 
-        if (playerIds.length === 2) {
-            // Assign each player the other as a target
-            const [player1, player2] = playerIds;
+    // Ensure there are enough players to assign targets
+    if (playerIds.length > 1) {
+        let shuffledPlayerIds = shuffleArray(playerIds);
+        
+        // Check for self-targets and fix them by re-shuffling or swapping
+        while (hasSelfTargets(shuffledPlayerIds, players)) {
+            shuffledPlayerIds = shuffleArray(shuffledPlayerIds);  // Re-shuffle if self-targets exist
+        }
 
-            // Assign player1's target as player2 and vice versa
-            update(ref(database, 'players/' + player1), {
-                target: players[player2].lastName
+        // Assign each player a target from the shuffled list
+        for (let i = 0; i < shuffledPlayerIds.length; i++) {
+            const currentPlayerId = shuffledPlayerIds[i];
+            const targetPlayerId = shuffledPlayerIds[(i + 1) % shuffledPlayerIds.length];  // Circular assignment
+
+            // Update the target for each player in the database
+            update(ref(database, 'players/' + currentPlayerId), {
+                target: players[targetPlayerId].lastName
             }).then(() => {
-                console.log(`${players[player1].lastName} now has their target: ${players[player2].lastName}`);
+                console.log(`${players[currentPlayerId].lastName} now has their target: ${players[targetPlayerId].lastName}`);
             }).catch((error) => {
-                console.error("Error assigning target for player1: ", error);
-            });
-
-            update(ref(database, 'players/' + player2), {
-                target: players[player1].lastName
-            }).then(() => {
-                console.log(`${players[player2].lastName} now has their target: ${players[player1].lastName}`);
-            }).catch((error) => {
-                console.error("Error assigning target for player2: ", error);
+                console.error(`Error assigning target for ${players[currentPlayerId].lastName}: `, error);
             });
         }
+    } else {
+        console.log("Not enough players to assign targets.");
     }
+}
 
+// Helper function to shuffle an array (Fisher-Yates Shuffle)
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];  // Swap elements
+    }
+    return array;
+}
+
+// Helper function to check for self-targets
+function hasSelfTargets(playerIds, players) {
+    for (let i = 0; i < playerIds.length; i++) {
+        const currentPlayerId = playerIds[i];
+        const targetPlayerId = playerIds[(i + 1) % playerIds.length];
+        if (players[currentPlayerId].lastName === players[targetPlayerId].lastName) {
+            return true;  // Found a self-target
+        }
+    }
+    return false;
+}
+
+    
     function showGamePage(playerData) {
         const targetName = playerData.target ? playerData.target : "Target will be revealed when the game begins.";
         playerNameSpan.textContent = playerData.lastName;
