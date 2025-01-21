@@ -81,7 +81,7 @@
         get(playersRef).then((snapshot) => {
             const players = snapshot.val();
             const playerIds = Object.keys(players);
-            const requiredPlayersCount = 2; // Adjust the number based on how many players you want
+            const requiredPlayersCount = 13; // Adjust the number based on how many players you want
 
             console.log(`Current player count: ${playerIds.length}, required: ${requiredPlayersCount}`);
 
@@ -176,7 +176,7 @@
         playerListItems.forEach((listItem) => {
             const playerName = listItem.querySelector("span").textContent;
             if (playerName === userId) {
-                listItem.style.color = "orange";  // Change to orange when eliminated
+                listItem.style.color = "#ff5722";  // Change to #ff5722 (orange) when eliminated
             }
         });
     }
@@ -226,18 +226,19 @@
 
                     // Highlight eliminated players in orange
                     if (player.target === "Eliminated") {
-                        listItem.style.color = "orange";
+                        listItem.style.color = "#ff5722";  // Set color to orange for eliminated
                     }
 
-                    listItem.appendChild(playerName);
+                    listItem.prepend(playerName);
                     playersContainer.appendChild(listItem);
                 });
             }
         }).catch((error) => {
-            console.error("Error fetching players:", error);
+            console.error("Error fetching players: ", error);
         });
     }
 </script>
+
 
 
 
