@@ -174,30 +174,37 @@
         playersTitle.style.display = 'block';
         displayPlayers();
 
-        // Eliminate the target when the button is clicked
-        eliminateTargetButton.addEventListener("click", () => {
-            const userId = `${lastNameInput.value}_${codeInput.value}`; // The player eliminating the target
-            const target = targetSpan.textContent; // The player who is the target
+eliminateTargetButton.addEventListener("click", () => {
+    const userId = `${lastNameInput.value}_${codeInput.value}`; // The player eliminating the target
+    const target = targetSpan.textContent; // The player who is the target
 
-            if (target && target !== "Target will be revealed when the game begins.") {
-                // Find the target's userId, based on their name
-                const targetUserId = getUserIdByName(target);
+    if (target && target !== "Target will be revealed when the game begins.") {
+        // Retrieve the list of players from Firebase directly
+        get(playersRef).then((snapshot) => {
+            const players = snapshot.val();
 
-                if (targetUserId) {
-                    // Update the target's status to "Eliminated" in the database
-                    update(ref(database, 'players/' + targetUserId), {
-                        status: "Eliminated"
-                    }).then(() => {
-                        console.log(`${target} has been eliminated by ${userId}`);
-                        targetSpan.textContent = "You have eliminated your target!";  // Update UI
-                        eliminateTargetButton.style.display = "none";  // Hide the button after clicking
-                        updatePlayerStatus(targetUserId); // Update player status (highlight eliminated target)
-                    }).catch((error) => {
-                        console.error("Error eliminating target: ", error);
-                    });
-                }
+            // Find the target's userId based on their last name
+            const targetPlayer = Object.values(players).find(player => player.lastName === target);
+
+            if (targetPlayer) {
+                // Update the target's status to "Eliminated" in the database
+                update(ref(database, 'players/' + targetPlayer.userId), {
+                    status: "Eliminated"
+                }).then(() => {
+                    console.log(`${target} has been eliminated by ${userId}`);
+                    targetSpan.textContent = "You have eliminated your target!";  // Update UI
+                    eliminateTargetButton.style.display = "none";  // Hide the button after clicking
+                    updatePlayerStatus(targetPlayer.userId); // Update player status (highlight eliminated target)
+                }).catch((error) => {
+                    console.error("Error eliminating target: ", error);
+                });
             }
+        }).catch((error) => {
+            console.error("Error getting players: ", error);
         });
+    }
+});
+
 
         function getUserIdByName(name) {
             // Retrieve the userId based on the target's name (assuming you have a mapping or a way to get it)
