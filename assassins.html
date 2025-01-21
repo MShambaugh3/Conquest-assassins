@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASSASSINS</title>
+    <title>CADET CONQUEST</title>
 
     <!-- Firebase SDK (Module Version) -->
     <script type="module">
@@ -43,21 +43,21 @@
 
             if (lastName && code.length === 4) {
                 const userId = `${lastName}_${code}`;
-                console.log(`Signing up user: ${userId}`);
+                console.log(`Signing up cadet: ${userId}`);
 
                 // Check if player exists, if not create new player
                 get(ref(database, 'players/' + userId)).then((snapshot) => {
                     if (snapshot.exists()) {
-                        console.log(`Player ${userId} already exists, showing their target`);
+                        console.log(`Cadet ${userId} already exists, sending them to their target`);
                         showGamePage(snapshot.val());
                     } else {
-                        console.log(`Player ${userId} is new, creating them`);
+                        console.log(`New cadet ${userId} joining the ranks`);
                         set(ref(database, 'players/' + userId), {
                             lastName: lastName,
                             code: code,
                             target: ""
                         }).then(() => {
-                            console.log(`Player ${userId} added to Firebase`);
+                            console.log(`Cadet ${userId} successfully enrolled`);
                             checkAllPlayersSignedUp();
                         }).catch((error) => {
                             console.error("Error writing to database: ", error);
@@ -67,7 +67,7 @@
                     console.error("Error getting player data: ", error);
                 });
             } else {
-                alert("Please enter a valid last name and 4-digit code.");
+                alert("Please enter a valid last name and a 4-digit code. No shortcuts, cadet.");
             }
         });
 
@@ -80,16 +80,16 @@
                 console.log(`Current player count: ${playerIds.length}, required: ${requiredPlayersCount}`);
 
                 if (playerIds.length >= requiredPlayersCount) {
-                    console.log("All assassins ready, BEGIN!");
+                    console.log("All cadets are ready! The hunt begins...");
                     // All players signed up, now mark game as started
                     update(gameStartedRef, { started: true }).then(() => {
-                        showGameStatus("The game has begun!");
+                        showGameStatus("The game has begun! Time to strike...");
                         assignTargets(players);
                     }).catch((error) => {
                         console.error("Error updating game status: ", error);
                     });
                 } else {
-                    showGameStatus("The league is almost full...");
+                    showGameStatus("Cadets are reporting in... almost there.");
                 }
             }).catch((error) => {
                 console.error("Error getting players: ", error);
@@ -111,7 +111,7 @@
                 update(ref(database, 'players/' + playerId), {
                     target: players[targetId].lastName
                 }).then(() => {
-                    console.log(`${players[playerId].lastName} is assigned to target ${players[targetId].lastName}`);
+                    console.log(`${players[playerId].lastName} now has their target: ${players[targetId].lastName}`);
                 }).catch((error) => {
                     console.error("Error assigning target: ", error);
                 });
@@ -119,7 +119,7 @@
         }
 
         function showGamePage(playerData) {
-            const targetName = playerData.target ? playerData.target : "Target will be assigned once the game begins.";
+            const targetName = playerData.target ? playerData.target : "Target will be revealed when the game begins.";
             playerNameSpan.textContent = playerData.lastName;
             targetSpan.textContent = targetName;
 
@@ -137,10 +137,10 @@
         get(gameStartedRef).then((snapshot) => {
             if (snapshot.exists() && snapshot.val().started) {
                 console.log("Game has started.");
-                showGameStatus("The game has already started!");
+                showGameStatus("The game is already in progress. Stay sharp.");
             } else {
-                console.log("Game has not started yet.");
-                showGameStatus("SOON, patience is an assassins friend...");
+                console.log("Game hasn't started yet.");
+                showGameStatus("Patience, cadet. Your mission awaits...");
             }
         }).catch((error) => {
             console.error("Error checking game start status: ", error);
@@ -148,53 +148,59 @@
     </script>
 
     <style>
+
         body {
-            background-color: #000;
-            color: #fff;
-            font-family: 'Arial', sans-serif;
-            text-align: center;
-            margin: 0;
-            padding: 0;
+        background-color: #000;
+        background: url('./ninja.png') no-repeat center center fixed;
+        background-size: cover;
+        color: #fff;
+        font-family: 'Android Assassin', sans-serif;
+        text-align: center;
+        margin: 0;
+        padding: 0;
         }
 
         h1 {
-            font-size: 2.5em;
+            font-size: 3em;
             margin-top: 20px;
+            color: #ff5722;
+            text-shadow: 0 0 10px #ff5722, 0 0 20px #e64a19;
+        }
+        
+        h2 {
+            font-size: 1.5em;
+            margin-top: -10px;
             color: #fff;
+            text-shadow: 0 0 5px #fff;
         }
-
-        #game-status {
-            margin-top: 10px;
-            font-size: 1.2em;
-            color: #f5f5f5;
-        }
-
+        
         #sign-in {
             display: block;
             background-color: rgba(0, 0, 0, 0.8);
-            padding: 30px;
+            padding-right: 30px;
             margin-top: 50px;
             width: 100%;
             max-width: 350px;
             border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 4px 20px rgba(255, 87, 34, 0.8);
             margin-left: auto;
             margin-right: auto;
             opacity: 1;
             transition: opacity 0.5s ease;
         }
-
+        
         #sign-in input {
             width: 100%;
             padding: 15px;
             margin: 10px 0;
             font-size: 1.2em;
-            background-color: #333;
+            background-color: #222;
             color: #fff;
             border: 1px solid #555;
             border-radius: 5px;
+            text-shadow: 0 0 5px #fff;
         }
-
+        
         #sign-in-btn {
             background-color: #ff5722;
             color: #fff;
@@ -204,8 +210,9 @@
             cursor: pointer;
             border-radius: 5px;
             transition: background-color 0.3s;
+            box-shadow: 0 0 10px #ff5722, 0 0 20px #e64a19;
         }
-
+        
         #sign-in-btn:hover {
             background-color: #e64a19;
         }
@@ -245,27 +252,39 @@
                 font-size: 2em;
             }
 
+            h2 {
+                font-size: 1em;
+            }
+
             #game p {
                 font-size: 1.2em;
             }
         }
+
+        @font-face {
+    font-family: 'Android Assassin';
+    src: url('./android_assassin.ttf') format('truetype');
+}
+
+
+
     </style>
 </head>
 <body>
 
-    <h1>Senior Assassin Game</h1>
-
-    <div id="game-status"></div>
+    <h1>CADET CONQUEST</h1>
+    <h2>are you ready?</h2>
 
     <div id="sign-in">
-        <input type="text" id="lastName" placeholder="Enter your Last Name">
-        <input type="text" id="code" placeholder="Enter your 4-Digit Code">
-        <button id="sign-in-btn">Sign Up</button>
+        <input type="text" id="lastName" placeholder="Enter Last Name">
+        <input type="text" id="code" placeholder="Enter 4-digit Code" maxlength="4">
+        <button id="sign-in-btn">Join the Hunt</button>
     </div>
 
     <div id="game">
         <p>Welcome, <span id="player-name"></span></p>
         <p>Your target: <span id="target"></span></p>
+        <p id="game-status"></p>
     </div>
 
 </body>
