@@ -8,9 +8,9 @@
     <!-- Firebase SDK (Module Version) -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-app.js";
-    import { getDatabase, ref, set, get, child, update } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-database.js";
+    import { getDatabase, ref, set, get, update } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-database.js";
 
-    // Your Firebase config
+    // Firebase configuration
     const firebaseConfig = {
         apiKey: "AIzaSyCBqWm98LL4Kn5GteIEMclELapks-jcsFw",
         authDomain: "assassin-dd206.firebaseapp.com",
@@ -33,12 +33,15 @@
     const signInDiv = document.getElementById("sign-in");
     const gameDiv = document.getElementById("game");
     const gameStatusSpan = document.getElementById("game-status");
+    const playersTitle = document.getElementById("players-title");  // Reference to the "Players in the game" title
+    const playersContainer = document.getElementById("players-container");
 
     const gameStartedRef = ref(database, 'gameStarted');
     const playersRef = ref(database, 'players');
 
-    // Hide game section and show sign-in section by default
+    // Initially hide the game section, players title, and players list
     gameDiv.style.display = 'none';
+    playersTitle.style.display = 'none';  // Hide title initially
 
     signInButton.addEventListener("click", () => {
         const lastName = lastNameInput.value;
@@ -48,11 +51,11 @@
             const userId = `${lastName}_${code}`;
             console.log(`Signing up : ${userId}`);
 
-            // Check if player exists, if not create new player
+            // Check if the player exists, if not, create the player
             get(ref(database, 'players/' + userId)).then((snapshot) => {
                 if (snapshot.exists()) {
                     console.log(`Cadet ${userId} already exists, sending them to their target`);
-                    showGamePage(snapshot.val());
+                    showGamePage(snapshot.val()); // Show game content if user exists
                 } else {
                     console.log(`New cadet ${userId} joining the ranks`);
                     set(ref(database, 'players/' + userId), {
@@ -141,8 +144,9 @@
         signInDiv.style.display = 'none';
         gameDiv.style.display = 'block';
         gameDiv.classList.add('fade-in');
-        
-        // Display all players after login
+
+        // Show "Players in the game" title and display players after login
+        playersTitle.style.display = 'block';  // Show title after login
         displayPlayers();
 
         // Eliminate the target when the button is clicked
@@ -190,7 +194,6 @@
         // Fetch all players data from Firebase
         get(playersRef).then((snapshot) => {
             const players = snapshot.val();
-            const playersContainer = document.getElementById("players-container");
             
             // Clear the list before displaying fresh data
             playersContainer.innerHTML = "";
@@ -203,24 +206,20 @@
 
                     // Set the player's name and status
                     playerName.textContent = player.lastName;
-                    if (player.target === "Eliminated") {
-                        playerName.style.color = "#ff7f00"; // Orange color for eliminated players
-                    } else {
-                        playerName.style.color = "#ffffff"; // White color for alive players
+                    if (player.target && player.target !== "Eliminated") {
+                        playerName.textContent += ` (Target: ${player.target})`;
                     }
 
-                    // Append the player name to the list item
                     listItem.appendChild(playerName);
                     playersContainer.appendChild(listItem);
                 });
-            } else {
-                playersContainer.innerHTML = "<li>No players in the game.</li>";
             }
         }).catch((error) => {
-            console.error("Error fetching players: ", error);
+            console.error("Error fetching players:", error);
         });
     }
 </script>
+
 
 
 
@@ -421,7 +420,8 @@
     <button id="eliminate-target-btn">IT IS DONE!</button>
 
     <div id="players-list">
-        <h3>Players in the Game</h3>
+        <!-- Hide "Players in the game" title initially -->
+        <h3 id="players-title" style="display:none;">Players in the game</h3>
         <ul id="players-container"></ul>
     </div>
 
