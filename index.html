@@ -33,7 +33,7 @@
     const signInDiv = document.getElementById("sign-in");
     const gameDiv = document.getElementById("game");
     const gameStatusSpan = document.getElementById("game-status");
-    const playersTitle = document.getElementById("players-title");  // Reference to the "Players in the game" title
+    const playersTitle = document.getElementById("players-title");
     const playersContainer = document.getElementById("players-container");
 
     const gameStartedRef = ref(database, 'gameStarted');
@@ -41,7 +41,7 @@
 
     // Initially hide the game section, players title, and players list
     gameDiv.style.display = 'none';
-    playersTitle.style.display = 'none';  // Hide title initially
+    playersTitle.style.display = 'none';
 
     signInButton.addEventListener("click", () => {
         const lastName = lastNameInput.value;
@@ -146,7 +146,7 @@
         gameDiv.classList.add('fade-in');
 
         // Show "Players in the game" title and display players after login
-        playersTitle.style.display = 'block';  // Show title after login
+        playersTitle.style.display = 'block';
         displayPlayers();
 
         // Eliminate the target when the button is clicked
@@ -162,9 +162,22 @@
                     console.log(`${userId} has eliminated their target`);
                     targetSpan.textContent = "You have eliminated your target!";  // Update UI
                     eliminateTargetButton.style.display = "none";  // Hide the button after clicking
+                    updatePlayerStatus(userId); // Update player status
                 }).catch((error) => {
                     console.error("Error eliminating target: ", error);
                 });
+            }
+        });
+    }
+
+    function updatePlayerStatus(userId) {
+        // Change player status color to orange when eliminated
+        const playerListItems = document.querySelectorAll("#players-container li");
+
+        playerListItems.forEach((listItem) => {
+            const playerName = listItem.querySelector("span").textContent;
+            if (playerName === userId) {
+                listItem.style.color = "orange";  // Change to orange when eliminated
             }
         });
     }
@@ -194,7 +207,7 @@
         // Fetch all players data from Firebase
         get(playersRef).then((snapshot) => {
             const players = snapshot.val();
-            
+
             // Clear the list before displaying fresh data
             playersContainer.innerHTML = "";
 
@@ -210,6 +223,11 @@
                         playerName.textContent += ` (Target: ${player.target})`;
                     }
 
+                    // Highlight eliminated players in orange
+                    if (player.target === "Eliminated") {
+                        listItem.style.color = "orange";
+                    }
+
                     listItem.appendChild(playerName);
                     playersContainer.appendChild(listItem);
                 });
@@ -219,6 +237,7 @@
         });
     }
 </script>
+
 
 
 
