@@ -175,38 +175,53 @@ function hasSelfTargets(playerIds, players) {
         playersTitle.style.display = 'block';
         displayPlayers();
 
-        // Eliminate the target when the button is clicked
-        eliminateTargetButton.addEventListener("click", () => {
-            const userId = `${lastNameInput.value}_${codeInput.value}`;
-            const target = targetSpan.textContent;
+// Eliminate the target when the button is clicked
+eliminateTargetButton.addEventListener("click", () => {
+    const userId = `${lastNameInput.value}_${codeInput.value}`; // The player eliminating the target
+    const target = targetSpan.textContent; // The player who is the target
 
-            if (target && target !== "Target will be revealed when the game begins.") {
-                // Update the target to "Eliminated" in the database for the player
-                update(ref(database, 'players/' + userId), {
-                    target: "Eliminated"
-                }).then(() => {
-                    console.log(`${userId} has eliminated their target`);
-                    targetSpan.textContent = "You have eliminated your target!";  // Update UI
-                    eliminateTargetButton.style.display = "none";  // Hide the button after clicking
-                    updatePlayerStatus(userId); // Update player status
-                }).catch((error) => {
-                    console.error("Error eliminating target: ", error);
-                });
-            }
-        });
+    if (target && target !== "Target will be revealed when the game begins.") {
+        // Find the target's userId, based on their name
+        const targetUserId = getUserIdByName(target);
+
+        if (targetUserId) {
+            // Update the target's status to "Eliminated" in the database
+            update(ref(database, 'players/' + targetUserId), {
+                status: "Eliminated"
+            }).then(() => {
+                console.log(`${target} has been eliminated by ${userId}`);
+                targetSpan.textContent = "You have eliminated your target!";  // Update UI
+                eliminateTargetButton.style.display = "none";  // Hide the button after clicking
+                updatePlayerStatus(targetUserId); // Update player status (highlight eliminated target)
+            }).catch((error) => {
+                console.error("Error eliminating target: ", error);
+            });
+        }
     }
+});
 
-    function updatePlayerStatus(userId) {
-        // Change player status color to orange when eliminated
-        const playerListItems = document.querySelectorAll("#players-container li");
+function getUserIdByName(name) {
+    // Retrieve the userId based on the target's name (assuming you have a mapping or a way to get it)
+    // For example, you could fetch it from the database or maintain a mapping in your app
+    // Example: return 'JohnDoe_1234' when name is 'John Doe'
+    // This is a placeholder function—implement according to how your userId is structured
+    const playerList = getPlayerList(); // Assume you have this function or list
+    const player = playerList.find(player => player.lastName === name);
+    return player ? player.userId : null;
+}
 
-        playerListItems.forEach((listItem) => {
-            const playerName = listItem.querySelector("span").textContent;
-            if (playerName === userId) {
-                listItem.style.color = "#ff5722";  // Change to #ff5722 (orange) when eliminated
-            }
-        });
-    }
+function updatePlayerStatus(targetUserId) {
+    // Change the target's status color to orange when eliminated
+    const playerListItems = document.querySelectorAll("#players-container li");
+
+    playerListItems.forEach((listItem) => {
+        const playerName = listItem.querySelector("span").textContent;
+        if (playerName === targetUserId) {
+            listItem.style.color = "#ff5722";  // Change to #ff5722 (orange) when eliminated
+        }
+    });
+}
+
 
     function showGameStatus(statusMessage) {
         gameStatusSpan.textContent = statusMessage;
