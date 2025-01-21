@@ -7,184 +7,171 @@
 
     <!-- Firebase SDK (Module Version) -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-app.js";
-        import { getDatabase, ref, set, get, child, update } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-app.js";
+    import { getDatabase, ref, set, get, child, update } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-database.js";
 
-        // Your Firebase config
-        const firebaseConfig = {
-            apiKey: "AIzaSyCBqWm98LL4Kn5GteIEMclELapks-jcsFw",
-            authDomain: "assassin-dd206.firebaseapp.com",
-            projectId: "assassin-dd206",
-            storageBucket: "assassin-dd206.firebasestorage.app",
-            messagingSenderId: "507379491631",
-            appId: "1:507379491631:web:85186e6dbfa0662bb037da",
-            measurementId: "G-P7N9BZYQJ9"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
-
-        const signInButton = document.getElementById("sign-in-btn");
-        const lastNameInput = document.getElementById("lastName");
-        const codeInput = document.getElementById("code");
-        const playerNameSpan = document.getElementById("player-name");
-        const targetSpan = document.getElementById("target");
-        const signInDiv = document.getElementById("sign-in");
-        const gameDiv = document.getElementById("game");
-        const gameStatusSpan = document.getElementById("game-status");
-
-        const gameStartedRef = ref(database, 'gameStarted');
-        const playersRef = ref(database, 'players');
-
-        signInButton.addEventListener("click", () => {
-            const lastName = lastNameInput.value;
-            const code = codeInput.value;
-
-            if (lastName && code.length === 4) {
-                const userId = `${lastName}_${code}`;
-                console.log(`Signing up : ${userId}`);
-
-                // Check if player exists, if not create new player
-                get(ref(database, 'players/' + userId)).then((snapshot) => {
-                    if (snapshot.exists()) {
-                        console.log(`Cadet ${userId} already exists, sending them to their target`);
-                        showGamePage(snapshot.val());
-                    } else {
-                        console.log(`New cadet ${userId} joining the ranks`);
-                        set(ref(database, 'players/' + userId), {
-                            lastName: lastName,
-                            code: code,
-                            target: ""
-                        }).then(() => {
-                            console.log(`User ${userId} successfully enrolled`);
-                            checkAllPlayersSignedUp();
-                        }).catch((error) => {
-                            console.error("Error writing to database: ", error);
-                        });
-                    }
-                }).catch((error) => {
-                    console.error("Error getting player data: ", error);
-                });
-            } else {
-                alert("Please enter a valid last name and a 4-digit code. No shortcuts, cadet.");
-            }
-        });
-
-        function checkAllPlayersSignedUp() {
-            get(playersRef).then((snapshot) => {
-                const players = snapshot.val();
-                const playerIds = Object.keys(players);
-                const requiredPlayersCount = 2; // Adjust the number based on how many players you want
-
-                console.log(`Current player count: ${playerIds.length}, required: ${requiredPlayersCount}`);
-
-                if (playerIds.length >= requiredPlayersCount) {
-                    console.log("All players are ready! The hunt begins...");
-                    // All players signed up, now mark game as started
-                    update(gameStartedRef, { started: true }).then(() => {
-                        showGameStatus("The game has begun! Time to strike...");
-                        assignTargets(players);
+            // Your Firebase config
+            const firebaseConfig = {
+                apiKey: "AIzaSyCBqWm98LL4Kn5GteIEMclELapks-jcsFw",
+                authDomain: "assassin-dd206.firebaseapp.com",
+                projectId: "assassin-dd206",
+                storageBucket: "assassin-dd206.firebasestorage.app",
+                messagingSenderId: "507379491631",
+                appId: "1:507379491631:web:85186e6dbfa0662bb037da",
+                measurementId: "G-P7N9BZYQJ9"
+            };
+        
+            // Initialize Firebase
+            const app = initializeApp(firebaseConfig);
+            const database = getDatabase(app);
+        
+            const signInButton = document.getElementById("sign-in-btn");
+            const lastNameInput = document.getElementById("lastName");
+            const codeInput = document.getElementById("code");
+            const playerNameSpan = document.getElementById("player-name");
+            const targetSpan = document.getElementById("target");
+            const signInDiv = document.getElementById("sign-in");
+            const gameDiv = document.getElementById("game");
+            const gameStatusSpan = document.getElementById("game-status");
+        
+            const gameStartedRef = ref(database, 'gameStarted');
+            const playersRef = ref(database, 'players');
+        
+            signInButton.addEventListener("click", () => {
+                const lastName = lastNameInput.value;
+                const code = codeInput.value;
+        
+                if (lastName && code.length === 4) {
+                    const userId = `${lastName}_${code}`;
+                    console.log(`Signing up : ${userId}`);
+        
+                    // Check if player exists, if not create new player
+                    get(ref(database, 'players/' + userId)).then((snapshot) => {
+                        if (snapshot.exists()) {
+                            console.log(`Cadet ${userId} already exists, sending them to their target`);
+                            showGamePage(snapshot.val());
+                        } else {
+                            console.log(`New cadet ${userId} joining the ranks`);
+                            set(ref(database, 'players/' + userId), {
+                                lastName: lastName,
+                                code: code,
+                                target: ""
+                            }).then(() => {
+                                console.log(`User ${userId} successfully enrolled`);
+                                checkAllPlayersSignedUp();
+                            }).catch((error) => {
+                                console.error("Error writing to database: ", error);
+                            });
+                        }
                     }).catch((error) => {
-                        console.error("Error updating game status: ", error);
+                        console.error("Error getting player data: ", error);
                     });
                 } else {
-                    showGameStatus("Clans are reporting in... almost there.");
+                    alert("Please enter a valid last name and a 4-digit code. No shortcuts, cadet.");
+                }
+            });
+        
+            function checkAllPlayersSignedUp() {
+                get(playersRef).then((snapshot) => {
+                    const players = snapshot.val();
+                    const playerIds = Object.keys(players);
+                    const requiredPlayersCount = 2; // Adjust the number based on how many players you want
+        
+                    console.log(`Current player count: ${playerIds.length}, required: ${requiredPlayersCount}`);
+        
+                    if (playerIds.length >= requiredPlayersCount) {
+                        console.log("All players are ready! The hunt begins...");
+                        // All players signed up, now mark game as started
+                        update(gameStartedRef, { started: true }).then(() => {
+                            showGameStatus("The game has begun! Time to strike...");
+                            assignTargets(players);
+                        }).catch((error) => {
+                            console.error("Error updating game status: ", error);
+                        });
+                    } else {
+                        showGameStatus("Clans are reporting in... almost there.");
+                    }
+                }).catch((error) => {
+                    console.error("Error getting players: ", error);
+                });
+            }
+        
+            function assignTargets(players) {
+                const playerIds = Object.keys(players);
+                const availableTargets = [...playerIds];
+        
+                // Randomly assign each player a target, excluding themselves
+                playerIds.forEach((playerId) => {
+                    availableTargets.splice(availableTargets.indexOf(playerId), 1); // Remove self from available targets
+        
+                    const randomTargetIndex = Math.floor(Math.random() * availableTargets.length);
+                    const targetId = availableTargets[randomTargetIndex];
+        
+                    // Assign target to the player
+                    update(ref(database, 'players/' + playerId), {
+                        target: players[targetId].lastName
+                    }).then(() => {
+                        console.log(`${players[playerId].lastName} now has their target: ${players[targetId].lastName}`);
+                    }).catch((error) => {
+                        console.error("Error assigning target: ", error);
+                    });
+                });
+            }
+        
+            function showGamePage(playerData) {
+                const targetName = playerData.target ? playerData.target : "Target will be revealed when the game begins.";
+                playerNameSpan.textContent = playerData.lastName;
+                targetSpan.textContent = targetName;
+        
+                // Display the "Eliminate Target" button if there's a target
+                const eliminateTargetButton = document.getElementById("eliminate-target-btn");
+                if (targetName !== "Target will be revealed when the game begins.") {
+                    eliminateTargetButton.style.display = "inline-block";
+                }
+        
+                // Hide sign-in and show game page with smooth transition
+                signInDiv.style.display = 'none';
+                gameDiv.style.display = 'block';
+                gameDiv.classList.add('fade-in');
+        
+                // Eliminate the target when the button is clicked
+                eliminateTargetButton.addEventListener("click", () => {
+                    const userId = `${lastNameInput.value}_${codeInput.value}`;
+                    const target = targetSpan.textContent;
+        
+                    if (target && target !== "Target will be revealed when the game begins.") {
+                        // Update the target to "eliminated" in the database for the player
+                        update(ref(database, 'players/' + userId), {
+                            target: "Eliminated"
+                        }).then(() => {
+                            console.log(`${userId} has eliminated their target`);
+                            targetSpan.textContent = "You have eliminated your target!";
+                            eliminateTargetButton.style.display = "none"; // Hide the button after clicking
+                        }).catch((error) => {
+                            console.error("Error eliminating target: ", error);
+                        });
+                    }
+                });
+            }
+        
+            function showGameStatus(statusMessage) {
+                gameStatusSpan.textContent = statusMessage;
+            }
+        
+            // Check if the game has begun
+            get(gameStartedRef).then((snapshot) => {
+                if (snapshot.exists() && snapshot.val().started) {
+                    console.log("Game has started.");
+                    showGameStatus("The game is already in progress. Stay sharp.");
+                } else {
+                    console.log("Game hasn't started yet.");
+                    showGameStatus("Patience, Your mission awaits...");
                 }
             }).catch((error) => {
-                console.error("Error getting players: ", error);
+                console.error("Error checking game start status: ", error);
             });
-        }
+        </script>
 
-        function assignTargets(players) {
-            const playerIds = Object.keys(players);
-            const availableTargets = [...playerIds];
-
-            // Randomly assign each player a target, excluding themselves
-            playerIds.forEach((playerId) => {
-                availableTargets.splice(availableTargets.indexOf(playerId), 1); // Remove self from available targets
-
-                const randomTargetIndex = Math.floor(Math.random() * availableTargets.length);
-                const targetId = availableTargets[randomTargetIndex];
-
-                // Assign target to the player
-                update(ref(database, 'players/' + playerId), {
-                    target: players[targetId].lastName
-                }).then(() => {
-                    console.log(`${players[playerId].lastName} now has their target: ${players[targetId].lastName}`);
-                }).catch((error) => {
-                    console.error("Error assigning target: ", error);
-                });
-            });
-        }
-
-        function showGamePage(playerData) {
-            const targetName = playerData.target ? playerData.target : "Target will be revealed when the game begins.";
-            playerNameSpan.textContent = playerData.lastName;
-            targetSpan.textContent = targetName;
-
-            // Hide sign-in and show game page with smooth transition
-            signInDiv.style.display = 'none';
-            gameDiv.style.display = 'block';
-            gameDiv.classList.add('fade-in');
-        }
-
-        function showGameStatus(statusMessage) {
-            gameStatusSpan.textContent = statusMessage;
-        }
-
-        // Check if the game has begun
-        get(gameStartedRef).then((snapshot) => {
-            if (snapshot.exists() && snapshot.val().started) {
-                console.log("Game has started.");
-                showGameStatus("The game is already in progress. Stay sharp.");
-            } else {
-                console.log("Game hasn't started yet.");
-                showGameStatus("Patience, Your mission awaits...");
-            }
-        }).catch((error) => {
-            console.error("Error checking game start status: ", error);
-        });
-
-        const eliminateTargetButton = document.getElementById("eliminate-target-btn");
-
-        // Show the "Target Eliminated" button if the player has a target
-        function showGamePage(playerData) {
-            const targetName = playerData.target ? playerData.target : "Target will be revealed when the game begins.";
-            playerNameSpan.textContent = playerData.lastName;
-            targetSpan.textContent = targetName;
-        
-            // Display the "Eliminate Target" button if there's a target
-            if (targetName !== "Target will be revealed when the game begins.") {
-                eliminateTargetButton.style.display = "inline-block";
-            }
-        
-            // Hide sign-in and show game page with smooth transition
-            signInDiv.style.display = 'none';
-            gameDiv.style.display = 'block';
-            gameDiv.classList.add('fade-in');
-        }
-        
-        // Eliminate the target when the button is clicked
-        eliminateTargetButton.addEventListener("click", () => {
-            const userId = `${lastNameInput.value}_${codeInput.value}`;
-            const target = targetSpan.textContent;
-        
-            if (target && target !== "Target will be revealed when the game begins.") {
-                // Update the target to "eliminated" in the database for the player
-                update(ref(database, 'players/' + userId), {
-                    target: "Eliminated"
-                }).then(() => {
-                    console.log(`${userId} has eliminated their target`);
-                    targetSpan.textContent = "You have eliminated your target!";
-                    eliminateTargetButton.style.display = "none"; // Hide the button after clicking
-                }).catch((error) => {
-                    console.error("Error eliminating target: ", error);
-                });
-            }
-        });
-
-    </script>
 
     <style>
 
